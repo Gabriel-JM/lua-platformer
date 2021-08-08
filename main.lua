@@ -1,5 +1,6 @@
 local anim8 = require 'modules/anim8/anim8'
 local wf = require 'modules/windfield/windfield'
+local sti = require 'modules/Simple-Tiled-Implementation/sti'
 
 function love.load()
   love.window.setMode(1000, 768)
@@ -29,23 +30,26 @@ function love.load()
 
   player = require('./player')
 
-  platform = world:newRectangleCollider(250, 400, 300, 100, {
-    collision_class = 'Platform'
-  })
-  platform:setType('static')
+  require('spawnPlatform')
 
-  dangerZone = world:newRectangleCollider(0, 550, 800, 50, {
-    collision_class = 'Danger'
-  })
-  dangerZone:setType('static')
+  -- dangerZone = world:newRectangleCollider(0, 550, 800, 50, {
+  --   collision_class = 'Danger'
+  -- })
+  -- dangerZone:setType('static')
+
+  platforms = {}
+
+  loadMap()
 end
 
 function love.update(dt)
   world:update(dt)
+  gameMap:update(dt)
   playerUpdate(dt)
 end
 
 function love.draw()
+  gameMap:drawLayer(gameMap.layers['Tile Layer 1'])
   world:draw()
   drawPlayer()
 end
@@ -55,5 +59,13 @@ function love.keypressed(key)
     if player.grounded then
       player:applyLinearImpulse(0, -3500)
     end
+  end
+end
+
+function loadMap()
+  gameMap = sti('maps/level1.lua')
+
+  for _, obj in pairs(gameMap.layers['Platforms'].objects) do
+    spawnPlatform(obj.x, obj.y, obj.width, obj.height)
   end
 end
