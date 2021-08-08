@@ -50,7 +50,20 @@ function love.load()
 
   platforms = {}
 
-  loadMap()
+  flagX = 0
+  flagY = 0
+
+  levels = {
+    level1 = {
+      next = 'level2'
+    },
+    level2 = {
+      next = 'level1'
+    }
+  }
+  currentLevel = 'level1'
+
+  loadMap(currentLevel)
 end
 
 function love.update(dt)
@@ -61,6 +74,11 @@ function love.update(dt)
 
   local px, py = player:getPosition()
   camera:lookAt(px, love.graphics.getHeight() / 2)
+
+  local colliders = world:queryCircleArea(flagX, flagY, 10, { 'Player' })
+  if #colliders > 0 then
+    loadMap(levels[currentLevel].next)
+  end
 end
 
 function love.draw()
@@ -82,8 +100,26 @@ function love.keypressed(key)
   end
 end
 
-function loadMap()
-  gameMap = sti('maps/level1.lua')
+function clearObjects(arr)
+  local i = #arr
+  while i > -1 do
+    if arr[i] ~= nil then
+      arr[i]:destroy()
+    end
+    table.remove(arr, i)
+    i = i - 1
+  end
+end
+
+function loadMap(mapName)
+  currentLevel = mapName
+
+  clearObjects(platforms)
+  clearObjects(enemies)
+
+  player:setPosition(300, 100)
+
+  gameMap = sti('maps/'..mapName..'.lua')
 
   for _, obj in pairs(gameMap.layers['Platforms'].objects) do
     spawnPlatform(obj.x, obj.y, obj.width, obj.height)
@@ -91,5 +127,10 @@ function loadMap()
 
   for _, enemyObj in pairs(gameMap.layers['Enemies'].objects) do
     spawnEnemy(enemyObj.x, enemyObj.y)
+  end
+
+  for _, flagObj in pairs(gameMap.layers['Flag'].objects) do
+    flagX = flagObj.x
+    flagY = flagObj.y
   end
 end
