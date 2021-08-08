@@ -8,7 +8,8 @@ function love.load()
 
   camera = cameraFile()
   sprites = {
-    playerSheet = love.graphics.newImage('sprites/playerSheet.png')
+    playerSheet = love.graphics.newImage('sprites/playerSheet.png'),
+    enemySheet = love.graphics.newImage('sprites/enemySheet.png')
   }
 
   local grid = anim8.newGrid(
@@ -17,11 +18,18 @@ function love.load()
     sprites.playerSheet:getWidth(),
     sprites.playerSheet:getHeight()
   )
+  local enemyGrid = anim8.newGrid(
+    100,
+    79,
+    sprites.enemySheet:getWidth(),
+    sprites.enemySheet:getHeight()
+  )
 
   animations = {
     idle = anim8.newAnimation(grid('1-15', 1), 0.05),
     jump = anim8.newAnimation(grid('1-7', 2), 0.05),
-    run = anim8.newAnimation(grid('1-15', 3), 0.05)
+    run = anim8.newAnimation(grid('1-15', 3), 0.05),
+    enemy = anim8.newAnimation(enemyGrid('1-2', 1), 0.03)
   }
 
   world = wf.newWorld(0, 800, false)
@@ -33,6 +41,7 @@ function love.load()
   player = require('./player')
 
   require('spawnPlatform')
+  require('enemy')
 
   -- dangerZone = world:newRectangleCollider(0, 550, 800, 50, {
   --   collision_class = 'Danger'
@@ -48,6 +57,7 @@ function love.update(dt)
   world:update(dt)
   gameMap:update(dt)
   playerUpdate(dt)
+  updateEnemies(dt)
 
   local px, py = player:getPosition()
   camera:lookAt(px, love.graphics.getHeight() / 2)
@@ -59,6 +69,7 @@ function love.draw()
   gameMap:drawLayer(gameMap.layers['Tile Layer 1'])
   world:draw()
   drawPlayer()
+  drawEnemies()
 
   camera:detach()
 end
@@ -76,5 +87,9 @@ function loadMap()
 
   for _, obj in pairs(gameMap.layers['Platforms'].objects) do
     spawnPlatform(obj.x, obj.y, obj.width, obj.height)
+  end
+
+  for _, enemyObj in pairs(gameMap.layers['Enemies'].objects) do
+    spawnEnemy(enemyObj.x, enemyObj.y)
   end
 end
