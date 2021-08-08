@@ -31,6 +31,7 @@ function love.load()
   player:setFixedRotation(true)
   player.speed = 240
   player.animation = animations.idle
+  player.isMoving = false
 
   platform = world:newRectangleCollider(250, 400, 300, 100, {
     collision_class = 'Platform'
@@ -47,13 +48,16 @@ function love.update(dt)
   world:update(dt)
 
   if player.body then
+    player.isMoving = false
     local px, py = player:getPosition()
     if love.keyboard.isDown('right') then
       player:setX(px + player.speed * dt)
+      player.isMoving = true
     end
 
     if love.keyboard.isDown('left') then
       player:setX(px - player.speed * dt)
+      player.isMoving = true
     end
 
     if player:enter('Danger') then
@@ -61,12 +65,18 @@ function love.update(dt)
     end
   end
 
+  if player.isMoving then
+    player.animation = animations.run
+  else
+    player.animation = animations.idle
+  end
+
   player.animation:update(dt)
 end
 
 function love.draw()
   world:draw()
-  
+
   local px, py = player:getPosition()
   player.animation:draw(
     sprites.playerSheet,
@@ -89,7 +99,7 @@ function love.keypressed(key)
       2,
       { 'Platform' }
     )
-    
+
     if #colliders > 0 then
       player:applyLinearImpulse(0, -3500)
     end
