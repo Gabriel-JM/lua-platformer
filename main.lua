@@ -42,6 +42,7 @@ function love.load()
 
   require('spawnPlatform')
   require('enemy')
+  require('show')
 
   -- dangerZone = world:newRectangleCollider(0, 550, 800, 50, {
   --   collision_class = 'Danger'
@@ -61,9 +62,17 @@ function love.load()
       next = 'level1'
     }
   }
-  currentLevel = 'level1'
 
-  loadMap(currentLevel)
+  saveData = {
+    currentLevel = 'level1'
+  }
+
+  if love.filesystem.getInfo('data.lua') then
+    local data = love.filesystem.load('data.lua')
+    data()
+  end
+
+  loadMap(saveData.currentLevel)
 end
 
 function love.update(dt)
@@ -77,7 +86,7 @@ function love.update(dt)
 
   local colliders = world:queryCircleArea(flagX, flagY, 10, { 'Player' })
   if #colliders > 0 then
-    loadMap(levels[currentLevel].next)
+    loadMap(levels[saveData.currentLevel].next)
   end
 end
 
@@ -112,7 +121,8 @@ function clearObjects(arr)
 end
 
 function loadMap(mapName)
-  currentLevel = mapName
+  saveData.currentLevel = mapName
+  love.filesystem.write('data.lua', table.show(saveData, 'saveData'))
 
   clearObjects(platforms)
   clearObjects(enemies)
